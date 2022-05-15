@@ -54,8 +54,9 @@ def func_response(status, content_name, content, message=False):
 
 @app.route("/cliente/consulta", methods=["GET"])
 def ConsultarSaldo():
+  body = request.get_json()
   try:
-    usuario = ContaCorrente.query.filter_by(agencia=12312, numero=12341234).first()
+    usuario = ContaCorrente.query.filter_by(agencia=body["agencia"], numero=body["numero"]).first()
     usuario_json = usuario.to_json()
 
     return func_response(200, "usuario", usuario_json, "ok")
@@ -65,9 +66,10 @@ def ConsultarSaldo():
 
 @app.route("/cliente/deposito", methods=["PATCH"])
 def DepositarConta():
+  body = request.get_json()
   try:
-    usuario = ContaCorrente.query.filter_by(agencia=123123, numero=12341234).first()
-    usuario.saldo += 1000
+    usuario = ContaCorrente.query.filter_by(agencia=body["agencia"], numero=body["numero"]).first()
+    usuario.saldo += body["ValorDeposito"]
     usuario_json = usuario.to_json()
     db.session.commit()
     return func_response(200, "usuario", usuario_json, "depositado com sucesso")
@@ -76,9 +78,10 @@ def DepositarConta():
     return func_response(400, "usuario", {}, "Usuario inexistente")
 @app.route("/cliente/saque", methods=["PATCH"])
 def SacarConta():
+  body = request.get_json()
   try:
-    usuario = ContaCorrente.query.filter_by(agencia=123123, numero=12341234).first()
-    valorSaque = 1000
+    usuario = ContaCorrente.query.filter_by(agencia=body["agencia"], numero=body["numero"]).first()
+    valorSaque = body["ValorSaque"]
     if valorSaque > usuario.saldo:
       return func_response(400, "usuario", {}, "Saldo insuficiente")
     usuario.saldo -= valorSaque
