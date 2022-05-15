@@ -92,6 +92,3 @@ def SacarConta():
     print(e)
     return func_response(400, "usuario", {}, "Usuario inexistente")
 app.run()
-
-
-
