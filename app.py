@@ -85,7 +85,7 @@ def SacarConta():
     usuario.saldo -= valorSaque
     usuario_json = usuario.to_json()
 
-    novoLog = LogTransacoes(DataTransacoes=datetime.datetime.now(),agencia=usuario.agencia, CodContaCorrente=usuario.numero, ValorTransacao=body["ValorSaque"], NaturezaTransacao="-")
+    novoLog = LogTransacoes(DataTransacoes=datetime.datetime.now(),agencia=usuario.agencia, CodContaCorrente=usuario.numero, ValorTransacao=body["ValorSaque"] * -1, NaturezaTransacao="-")
     db.session.add(novoLog)
 
     db.session.commit()
