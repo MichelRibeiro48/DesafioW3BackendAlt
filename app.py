@@ -51,46 +51,53 @@ def func_response(status, content_name, content, message=False):
 @app.route("/cliente/consulta", methods=["GET"])
 def ConsultarSaldo():
   body = request.get_json()
-  try:
-    usuario = ContaCorrente.query.filter_by(agencia=body["agencia"], numero=body["numero"]).first()
-    usuario_json = usuario.to_json()
 
-    return func_response(302, "usuario", usuario_json, "ok")
-  except Exception as e:
-    print(e)
-    return func_response(400, "usuario", {}, "Usuario inexistente")
+  if ContaCorrente.query.filter_by(agencia=body["agencia"]).first() == None:
+    return func_response(400, "usuario", {}, "Agencia Inexistente")
+  
+  if ContaCorrente.query.filter_by(numero=body["numero"]).first() == None:
+    return func_response(400, "usuario", {}, "Numero Inexistente")
+
+  usuario = ContaCorrente.query.filter_by(agencia=body["agencia"], numero=body["numero"]).first()
+  usuario_json = usuario.to_json()
+
+  return func_response(302, "usuario", usuario_json, "Consulta realizada com sucesso")
 
 @app.route("/cliente/deposito", methods=["POST"])
 def DepositarConta():
   body = request.get_json()
-  try:
-    usuario = ContaCorrente.query.filter_by(agencia=body["agencia"], numero=body["numero"]).first()
-    usuario.saldo += body["ValorDeposito"]
-    usuario_json = usuario.to_json()
-    novoLog = LogTransacoes(DataTransacoes=datetime.datetime.now(),agencia=usuario.agencia, CodContaCorrente=usuario.numero, ValorTransacao=body["ValorDeposito"], NaturezaTransacao="+")
-    db.session.add(novoLog)
-    db.session.commit()
-    return func_response(200, "usuario", usuario_json, "depositado com sucesso")
-  except Exception as e:
-    print(e)
-    return func_response(400, "usuario", {}, "Usuario inexistente")
+  if ContaCorrente.query.filter_by(agencia=body["agencia"]).first() == None:
+    return func_response(400, "usuario", {}, "Agencia Inexistente")
+  
+  if ContaCorrente.query.filter_by(numero=body["numero"]).first() == None:
+    return func_response(400, "usuario", {}, "Numero Inexistente")
+
+  usuario = ContaCorrente.query.filter_by(agencia=body["agencia"], numero=body["numero"]).first()
+  usuario.saldo += body["ValorDeposito"]
+  usuario_json = usuario.to_json()
+
+  novoLog = LogTransacoes(DataTransacoes=datetime.datetime.now(),agencia=usuario.agencia, CodContaCorrente=usuario.numero, ValorTransacao=body["ValorDeposito"], NaturezaTransacao="+")
+  db.session.add(novoLog)
+  db.session.commit()
+  return func_response(200, "usuario", usuario_json, "depositado com sucesso")
 @app.route("/cliente/saque", methods=["POST"])
 def SacarConta():
   body = request.get_json()
-  try:
-    usuario = ContaCorrente.query.filter_by(agencia=body["agencia"], numero=body["numero"]).first()
-    valorSaque = body["ValorSaque"]
-    if valorSaque > usuario.saldo:
-      return func_response(400, "usuario", {}, "Saldo insuficiente")
-    usuario.saldo -= valorSaque
-    usuario_json = usuario.to_json()
+  if ContaCorrente.query.filter_by(agencia=body["agencia"]).first() == None:
+    return func_response(400, "usuario", {}, "Agencia Inexistente")
+  
+  if ContaCorrente.query.filter_by(numero=body["numero"]).first() == None:
+    return func_response(400, "usuario", {}, "Numero Inexistente")
+  
+  usuario = ContaCorrente.query.filter_by(agencia=body["agencia"], numero=body["numero"]).first()
+  valorSaque = body["ValorSaque"]
+  if valorSaque > usuario.saldo:
+    return func_response(400, "usuario", {}, "Saldo insuficiente")
+  usuario.saldo -= valorSaque
+  usuario_json = usuario.to_json()
 
-    novoLog = LogTransacoes(DataTransacoes=datetime.datetime.now(),agencia=usuario.agencia, CodContaCorrente=usuario.numero, ValorTransacao=body["ValorSaque"] * -1, NaturezaTransacao="-")
-    db.session.add(novoLog)
-
-    db.session.commit()
-    return func_response(200, "usuario", usuario_json, "Saque realizado com sucesso")
-  except Exception as e:
-    print(e)
-    return func_response(400, "usuario", {}, "Usuario inexistente")
+  novoLog = LogTransacoes(DataTransacoes=datetime.datetime.now(),agencia=usuario.agencia, CodContaCorrente=usuario.numero, ValorTransacao=body["ValorSaque"] * -1, NaturezaTransacao="-")
+  db.session.add(novoLog)
+  db.session.commit()
+  return func_response(200, "usuario", usuario_json, "Saque realizado com sucesso")
 app.run()
